@@ -6,13 +6,32 @@ import threading
 import time
 from config import *
 
-bot = TeleBot(API_TOKEN)
 
 def gen_markup(id):
     markup = InlineKeyboardMarkup()
     markup.row_width = 1
     markup.add(InlineKeyboardButton("Получить!", callback_data=id))
     return markup
+    def get_winners_count(self, prize_id):
+        conn = sqlite3.connect(self.database)
+        with conn:
+            cur = conn.cursor()
+            cur.execute('SELECT COUNT(*) FROM winners WHERE prize_id = ?', (prize_id, ))
+            return cur.fetchall()[0][0]
+
+
+
+    def get_rating(self):
+        conn = sqlite3.connect(self.database)
+        with conn:
+            cur = conn.cursor()
+            cur.execute('''
+    SELECT users.user_name, COUNT(winners.prize_id) as count_prize FROM winners
+    INNER JOIN users on users.user_id = winners.user_id
+    GROUP BY winners.user_id
+    ORDER BY count_prize
+    LIMIT 10''')
+            return cur.fetchall()
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
